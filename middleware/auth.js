@@ -1,14 +1,16 @@
 const jwt = require('jsonwebtoken');
-const secret = process.env.JWT_SECRET;
 
 const authenticateJWT = (req, res, next) => {
-  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const authHeader = req.headers.authorization;
 
-  if (token) {
-    jwt.verify(token, secret, (err, user) => {
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
       if (err) {
         return res.sendStatus(403);
       }
+
       req.user = user;
       next();
     });

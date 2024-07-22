@@ -7,25 +7,33 @@ module.exports = (sequelize) => {
     static associate(models) {
       // Define associations here
     }
+
+    static async hashPassword(password) {
+      return bcrypt.hash(password, 10);
+    }
   }
 
   User.init({
     firstName: DataTypes.STRING,
     lastName: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    isAdmin: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
+    email: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false
     },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    isAdmin: DataTypes.BOOLEAN
   }, {
     sequelize,
     modelName: 'User',
-  });
-
-  User.beforeCreate(async (user, options) => {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(user.password, salt);
+    hooks: {
+      beforeCreate: async (user) => {
+        user.password = await User.hashPassword(user.password);
+      }
+    }
   });
 
   return User;

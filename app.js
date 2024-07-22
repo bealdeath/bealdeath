@@ -1,10 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const { sequelize, User, Table, Record } = require('./models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authenticateJWT = require('./middleware/auth');
-
-require('dotenv').config();
 
 const app = express();
 app.use(express.json());
@@ -14,7 +13,6 @@ const secret = process.env.JWT_SECRET;
 sequelize.authenticate()
   .then(() => {
     console.log('Connection has been established successfully.');
-    // Sync the database
     return sequelize.sync();
   })
   .then(() => {
@@ -32,7 +30,12 @@ app.get('/', (req, res) => {
 app.post('/register', async (req, res) => {
   const { firstName, lastName, email, password, isAdmin } = req.body;
   try {
-    const user = await User.create({ firstName, lastName, email, password, isAdmin });
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password before saving
+    const user = await User.create({ firstName, lastName, email, password: hashedPassword, isAdmin });
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -54,6 +57,7 @@ app.post('/login', async (req, res) => {
     const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, secret, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
+    console.error('Error generating token:', error);
     res.status(500).json({ error: error.message });
   }
 });
