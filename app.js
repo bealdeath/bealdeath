@@ -1,5 +1,5 @@
 const express = require('express');
-const { sequelize, User, Table, Record } = require('./models'); // Ensure models are imported correctly
+const { sequelize, User, Table, Record } = require('./models');
 
 const app = express();
 app.use(express.json());

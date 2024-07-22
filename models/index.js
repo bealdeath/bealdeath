@@ -6,7 +6,7 @@ const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const db = {};
 
-const sequelize = require('../config/database'); // Ensure this imports the Sequelize instance correctly
+const sequelize = require('../config/database');
 
 fs
   .readdirSync(__dirname)
@@ -14,8 +14,7 @@ fs
     return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
   })
   .forEach(file => {
-    const model = require(path.join(__dirname, file));
-    model.init(sequelize, Sequelize.DataTypes); // Pass Sequelize instance here
+    const model = require(path.join(__dirname, file))(sequelize);
     db[model.name] = model;
   });
 
