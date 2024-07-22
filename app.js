@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config();  // Load environment variables
 const express = require('express');
 const { sequelize, User, Table, Record } = require('./models');
 const bcrypt = require('bcryptjs');
@@ -9,6 +9,8 @@ const app = express();
 app.use(express.json());
 
 const secret = process.env.JWT_SECRET;
+
+console.log('JWT_SECRET:', secret);  // Debug log to verify the secret key
 
 sequelize.authenticate()
   .then(() => {
@@ -34,7 +36,7 @@ app.post('/register', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ firstName, lastName, email, password: hashedPassword, isAdmin });
     res.status(201).json(user);
   } catch (error) {
