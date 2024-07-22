@@ -30,9 +30,9 @@ app.get('/', (req, res) => {
 
 // Register user
 app.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, isAdmin } = req.body;
   try {
-    const user = await User.create({ firstName, lastName, email, password });
+    const user = await User.create({ firstName, lastName, email, password, isAdmin });
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -51,7 +51,7 @@ app.post('/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
-    const token = jwt.sign({ id: user.id, email: user.email }, secret, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, secret, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -74,7 +74,7 @@ app.get('/users', authenticateJWT, async (req, res) => {
 });
 
 // Routes for tables
-app.get('/tables', async (req, res) => {
+app.get('/tables', authenticateJWT, async (req, res) => {
   try {
     const tables = await Table.findAll();
     res.json(tables);
@@ -83,7 +83,7 @@ app.get('/tables', async (req, res) => {
   }
 });
 
-app.post('/tables', async (req, res) => {
+app.post('/tables', authenticateJWT, async (req, res) => {
   try {
     const { name } = req.body;
     const table = await Table.create({ name });
@@ -94,7 +94,7 @@ app.post('/tables', async (req, res) => {
 });
 
 // Routes for records
-app.get('/tables/:tableId/records', async (req, res) => {
+app.get('/tables/:tableId/records', authenticateJWT, async (req, res) => {
   try {
     const { tableId } = req.params;
     const records = await Record.findAll({ where: { tableId } });
@@ -104,7 +104,7 @@ app.get('/tables/:tableId/records', async (req, res) => {
   }
 });
 
-app.post('/tables/:tableId/records', async (req, res) => {
+app.post('/tables/:tableId/records', authenticateJWT, async (req, res) => {
   try {
     const { tableId } = req.params;
     const { content } = req.body;
@@ -116,7 +116,7 @@ app.post('/tables/:tableId/records', async (req, res) => {
 });
 
 // Update a record
-app.put('/tables/:tableId/records/:recordId', async (req, res) => {
+app.put('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) => {
   try {
     const { tableId, recordId } = req.params;
     const { content } = req.body;
@@ -134,7 +134,7 @@ app.put('/tables/:tableId/records/:recordId', async (req, res) => {
 });
 
 // Delete a record
-app.delete('/tables/:tableId/records/:recordId', async (req, res) => {
+app.delete('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) => {
   try {
     const { tableId, recordId } = req.params;
     const record = await Record.findOne({ where: { id: recordId, tableId } });
