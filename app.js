@@ -1,8 +1,15 @@
 const express = require('express');
 const { sequelize, User, Table, Record } = require('./models');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const authenticateJWT = require('./middleware/auth');
+
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+
+const secret = process.env.JWT_SECRET;
 
 sequelize.authenticate()
   .then(() => {
@@ -21,20 +28,46 @@ app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
 
-app.get('/users', async (req, res) => {
+// Register user
+app.post('/register', async (req, res) => {
+  const { firstName, lastName, email, password } = req.body;
   try {
-    const users = await User.findAll();
-    res.json(users);
+    const user = await User.create({ firstName, lastName, email, password });
+    res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/users', async (req, res) => {
+// Login user
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { firstName, lastName, email } = req.body;
-    const user = await User.create({ firstName, lastName, email });
-    res.status(201).json(user);
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+    const token = jwt.sign({ id: user.id, email: user.email }, secret, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Protect routes with authenticateJWT middleware
+app.get('/protected', authenticateJWT, (req, res) => {
+  res.send('This is a protected route');
+});
+
+// Protect users route
+app.get('/users', authenticateJWT, async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
