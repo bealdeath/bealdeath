@@ -31,6 +31,8 @@ app.post('/register', async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(`Hashing password for user: ${email}`);
+    console.log(`Hashed password: ${hashedPassword}`);
     const user = await User.create({ firstName, lastName, email, password: hashedPassword });
     res.status(201).json(user);
   } catch (error) {
@@ -38,7 +40,6 @@ app.post('/register', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 // Login user
 app.post('/login', async (req, res) => {
@@ -50,15 +51,12 @@ app.post('/login', async (req, res) => {
     }
 
     console.log('User found:', user);
-    console.log('Password:', password, typeof password);
-    console.log('Hashed Password:', user.password, typeof user.password);
-
-    // Check if password and hashed password are strings
-    if (typeof password !== 'string' || typeof user.password !== 'string') {
-      throw new Error('Password or hashed password is not a string');
-    }
+    console.log('Password provided:', password);
+    console.log('Hashed password from DB:', user.password);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('Password match result:', isPasswordValid);
+    
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -75,8 +73,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-
 
 // Protect routes with authenticateJWT middleware
 app.get('/protected', authenticateJWT, (req, res) => {

@@ -31,7 +31,9 @@ module.exports = (sequelize) => {
     modelName: 'User',
     hooks: {
       beforeCreate: async (user) => {
+        console.log('Hashing password for user:', user.email);
         user.password = await User.hashPassword(user.password);
+        console.log('Hashed password:', user.password);
       }
     }
   });
