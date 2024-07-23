@@ -100,7 +100,7 @@ app.get('/tables', authenticateJWT, async (req, res) => {
     const tables = await Table.findAll();
     res.json(tables);
   } catch (error) {
-    res.status 500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 

@@ -1,12 +1,13 @@
 const bcrypt = require('bcryptjs');
 
+// Plain password
 const plainPassword = 'password123';
-const hashedPassword = '$2a$10$3sG1i4Jpl9vD2dMr4Yu7nOkqvBq49P6UGhjFAIQHVto0seRUtRs7y'; // Use the hash generated in Step 1
 
-console.log('Plain Password:', plainPassword);
-console.log('Hashed Password from DB:', hashedPassword);
+// Example hash from the database (replace with actual hash)
+const hashedPasswordFromDB = '$2a$10$wY6CLiP9fWW4NWfx.47eFe/JRSnsfadB17Xsv4HFjm4Gpi8T5mKu.';
 
-bcrypt.compare(plainPassword, hashedPassword, (err, isMatch) => {
+// Compare the plain password with the hash from the database
+bcrypt.compare(plainPassword, hashedPasswordFromDB, (err, isMatch) => {
   if (err) {
     console.error('Error comparing passwords:', err);
   } else {
