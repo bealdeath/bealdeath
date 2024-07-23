@@ -1,6 +1,6 @@
-require('dotenv').config();  // Load environment variables from .env file
+require('dotenv').config();
 const express = require('express');
-const { sequelize, User, Table, Record } = require('./models');
+const { sequelize, User } = require('./models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authenticateJWT = require('./middleware/auth');
@@ -8,7 +8,7 @@ const authenticateJWT = require('./middleware/auth');
 const app = express();
 app.use(express.json());
 
-console.log('JWT_SECRET:', process.env.JWT_SECRET);  // Verify JWT_SECRET is loaded
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
 sequelize.authenticate()
   .then(() => {
@@ -34,6 +34,7 @@ app.post('/register', async (req, res) => {
     console.log(`Hashing password for user: ${email}`);
     console.log(`Hashed password: ${hashedPassword}`);
     const user = await User.create({ firstName, lastName, email, password: hashedPassword });
+    console.log('User created:', user);
     res.status(201).json(user);
   } catch (error) {
     console.error('Error registering user:', error);
@@ -88,6 +89,7 @@ app.get('/users', authenticateJWT, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Routes for tables
 app.get('/tables', authenticateJWT, async (req, res) => {
