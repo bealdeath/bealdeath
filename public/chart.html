@@ -26,11 +26,6 @@
       .then(data => {
         console.log('Fetched data:', data);
 
-        data.forEach(table => {
-          console.log(`Table Name: ${table.name}`);
-          console.log(`Number of Records: ${table.records.length}`);
-        });
-
         const tableNames = data.map(table => table.name);
         const recordCounts = data.map(table => table.records.length);
 

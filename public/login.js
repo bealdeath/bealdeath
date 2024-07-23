@@ -1,5 +1,5 @@
 document.getElementById('loginForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent form from submitting normally
+    event.preventDefault();
   
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -14,9 +14,9 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     .then(response => response.json())
     .then(data => {
       if (data.token) {
-        localStorage.setItem('token', data.token); // Store the token
+        localStorage.setItem('token', data.token);
         alert('Login successful');
-        window.location.href = '/chart'; // Redirect to chart page
+        window.location.href = '/chart';
       } else {
         console.error('Login failed');
         alert('Login failed');

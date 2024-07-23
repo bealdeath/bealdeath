@@ -10,8 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
-
+// Database connection
 sequelize.authenticate()
   .then(() => {
     console.log('Connection has been established successfully.');
@@ -24,6 +23,7 @@ sequelize.authenticate()
     console.error('Unable to connect to the database:', err);
   });
 
+// Home route
 app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
@@ -99,6 +99,7 @@ app.get('/viewer', authenticateJWT, verifyRole(['admin', 'editor', 'viewer']), (
   res.send('This is a viewer route');
 });
 
+// Get all users
 app.get('/users', authenticateJWT, async (req, res) => {
   try {
     const users = await User.findAll();
@@ -110,6 +111,7 @@ app.get('/users', authenticateJWT, async (req, res) => {
 
 // Route to serve data for charting
 app.get('/api/data', authenticateJWT, async (req, res) => {
+  console.log('Request received for /api/data'); // Log when the request is received
   try {
     const tables = await Table.findAll({
       include: [{
@@ -118,11 +120,11 @@ app.get('/api/data', authenticateJWT, async (req, res) => {
       }]
     });
 
-    // Log the data to verify structure
-    console.log('Tables data:', JSON.stringify(tables, null, 2));
+    console.log('Tables data:', JSON.stringify(tables, null, 2)); // Log the fetched data
 
     res.json(tables);
   } catch (error) {
+    console.error('Error fetching tables:', error); // Log any errors
     res.status(500).json({ error: error.message });
   }
 });
