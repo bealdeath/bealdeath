@@ -10,7 +10,7 @@
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Please login first');
-      window.location.href = '/login'; // Redirect to login page if token is missing
+      window.location.href = '/login';
     } else {
       fetch('/api/data', {
         headers: {
@@ -24,12 +24,25 @@
         return response.json();
       })
       .then(data => {
+        console.log('Fetched data:', data);
+
+        data.forEach(table => {
+          console.log(`Table Name: ${table.name}`);
+          console.log(`Number of Records: ${table.records.length}`);
+        });
+
+        const tableNames = data.map(table => table.name);
+        const recordCounts = data.map(table => table.records.length);
+
+        console.log('Table Names:', tableNames);
+        console.log('Record Counts:', recordCounts);
+
         const ctx = document.getElementById('myChart').getContext('2d');
         const chartData = {
-          labels: data.map(table => table.name), // Extract table names
+          labels: tableNames,
           datasets: [{
             label: 'Number of Records',
-            data: data.map(table => table.records.length), // Count the number of records in each table
+            data: recordCounts,
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1

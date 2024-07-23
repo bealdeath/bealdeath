@@ -8,6 +8,7 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
@@ -29,7 +30,7 @@ app.get('/', (req, res) => {
 
 // Serve login page
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Register user
@@ -116,6 +117,10 @@ app.get('/api/data', authenticateJWT, async (req, res) => {
         as: 'records'
       }]
     });
+
+    // Log the data to verify structure
+    console.log('Tables data:', JSON.stringify(tables, null, 2));
+
     res.json(tables);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -200,7 +205,7 @@ app.delete('/tables/:tableId/records/:recordId', authenticateJWT, async (req, re
 
 // Serve the chart HTML file
 app.get('/chart', (req, res) => {
-  res.sendFile(path.join(__dirname, 'chart.html'));
+  res.sendFile(path.join(__dirname, 'public', 'chart.html'));
 });
 
 const PORT = process.env.PORT || 5000;
