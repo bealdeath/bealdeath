@@ -28,13 +28,25 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    isAdmin: DataTypes.BOOLEAN
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false // Set a default value
+    },
+    role: {
+      type: DataTypes.ENUM('admin', 'editor', 'viewer'),
+      defaultValue: 'viewer'
+    }
   }, {
     sequelize,
     modelName: 'User',
     hooks: {
       beforeCreate: async (user) => {
         user.password = await User.hashPassword(user.password);
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed('password')) {
+          user.password = await User.hashPassword(user.password);
+        }
       }
     }
   });

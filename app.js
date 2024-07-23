@@ -3,11 +3,10 @@ const express = require('express');
 const { sequelize, User } = require('./models');
 const jwt = require('jsonwebtoken');
 const authenticateJWT = require('./middleware/auth');
+const verifyRole = require('./middleware/verifyRole');
 
 const app = express();
 app.use(express.json());
-
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
 sequelize.authenticate()
   .then(() => {
@@ -27,9 +26,10 @@ app.get('/', (req, res) => {
 
 // Register user
 app.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  const { firstName, lastName, email, password, role, isAdmin } = req.body; // Include isAdmin in the request body
   try {
-    const user = await User.create({ firstName, lastName, email, password });
+    const hashedPassword = await User.hashPassword(password);
+    const user = await User.create({ firstName, lastName, email, password: hashedPassword, role, isAdmin });
     console.log('User created:', user.dataValues);
     res.status(201).json(user);
   } catch (error) {
@@ -59,7 +59,7 @@ app.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id, isAdmin: user.isAdmin },
+      { userId: user.id, isAdmin: user.isAdmin, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -76,6 +76,19 @@ app.get('/protected', authenticateJWT, (req, res) => {
   res.send('This is a protected route');
 });
 
+// Apply role-based verification middleware
+app.get('/admin', authenticateJWT, verifyRole(['admin']), (req, res) => {
+  res.send('This is an admin route');
+});
+
+app.get('/editor', authenticateJWT, verifyRole(['admin', 'editor']), (req, res) => {
+  res.send('This is an editor route');
+});
+
+app.get('/viewer', authenticateJWT, verifyRole(['admin', 'editor', 'viewer']), (req, res) => {
+  res.send('This is a viewer route');
+});
+
 app.get('/users', authenticateJWT, async (req, res) => {
   try {
     const users = await User.findAll();
@@ -84,7 +97,6 @@ app.get('/users', authenticateJWT, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 // Routes for tables
 app.get('/tables', authenticateJWT, async (req, res) => {
