@@ -30,7 +30,7 @@ module.exports = (sequelize) => {
     },
     isAdmin: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false // Set a default value
+      defaultValue: false
     },
     role: {
       type: DataTypes.ENUM('admin', 'editor', 'viewer'),
@@ -41,11 +41,16 @@ module.exports = (sequelize) => {
     modelName: 'User',
     hooks: {
       beforeCreate: async (user) => {
+        if (!user.changed('password')) return;
+        console.log(`Hashing password for ${user.email}`);
         user.password = await User.hashPassword(user.password);
+        console.log(`Hashed password: ${user.password}`);
       },
       beforeUpdate: async (user) => {
         if (user.changed('password')) {
+          console.log(`Updating password for ${user.email}`);
           user.password = await User.hashPassword(user.password);
+          console.log(`Updated hashed password: ${user.password}`);
         }
       }
     }

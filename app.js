@@ -8,6 +8,8 @@ const verifyRole = require('./middleware/verifyRole');
 const app = express();
 app.use(express.json());
 
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+
 sequelize.authenticate()
   .then(() => {
     console.log('Connection has been established successfully.');
@@ -26,10 +28,10 @@ app.get('/', (req, res) => {
 
 // Register user
 app.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password, role, isAdmin } = req.body; // Include isAdmin in the request body
+  const { firstName, lastName, email, password, role, isAdmin } = req.body; // Include role and isAdmin
   try {
-    const hashedPassword = await User.hashPassword(password);
-    const user = await User.create({ firstName, lastName, email, password: hashedPassword, role, isAdmin });
+    console.log(`Registering user: ${email}`);
+    const user = await User.create({ firstName, lastName, email, password, role, isAdmin });
     console.log('User created:', user.dataValues);
     res.status(201).json(user);
   } catch (error) {
@@ -50,6 +52,7 @@ app.post('/login', async (req, res) => {
 
     console.log('User found:', JSON.stringify(user.dataValues));
     console.log('Password provided:', password);
+    console.log('Hashed password from DB:', user.password);
 
     const isMatch = await user.comparePassword(password);
     console.log(`Comparing: ${password} with ${user.password} -> ${isMatch}`);
