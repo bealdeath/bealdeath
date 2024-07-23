@@ -1,9 +1,10 @@
 require('dotenv').config();
 const express = require('express');
-const { sequelize, User } = require('./models');
+const { sequelize, User, Table, Record } = require('./models');
 const jwt = require('jsonwebtoken');
 const authenticateJWT = require('./middleware/auth');
 const verifyRole = require('./middleware/verifyRole');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
@@ -26,9 +27,14 @@ app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
 
+// Serve login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
 // Register user
 app.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password, role, isAdmin } = req.body; // Include role and isAdmin
+  const { firstName, lastName, email, password, role, isAdmin } = req.body;
   try {
     console.log(`Registering user: ${email}`);
     const user = await User.create({ firstName, lastName, email, password, role, isAdmin });
@@ -96,6 +102,21 @@ app.get('/users', authenticateJWT, async (req, res) => {
   try {
     const users = await User.findAll();
     res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Route to serve data for charting
+app.get('/api/data', authenticateJWT, async (req, res) => {
+  try {
+    const tables = await Table.findAll({
+      include: [{
+        model: Record,
+        as: 'records'
+      }]
+    });
+    res.json(tables);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -175,6 +196,11 @@ app.delete('/tables/:tableId/records/:recordId', authenticateJWT, async (req, re
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Serve the chart HTML file
+app.get('/chart', (req, res) => {
+  res.sendFile(path.join(__dirname, 'chart.html'));
 });
 
 const PORT = process.env.PORT || 5000;

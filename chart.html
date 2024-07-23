@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chart.js Example</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <canvas id="myChart" width="400" height="400"></canvas>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please login first');
+      window.location.href = '/login'; // Redirect to login page if token is missing
+    } else {
+      fetch('/api/data', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Unauthorized');
+        }
+        return response.json();
+      })
+      .then(data => {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const chartData = {
+          labels: data.map(table => table.name), // Extract table names
+          datasets: [{
+            label: 'Number of Records',
+            data: data.map(table => table.records.length), // Count the number of records in each table
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        };
+        new Chart(ctx, {
+          type: 'bar',
+          data: chartData,
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to fetch data');
+      });
+    }
+  </script>
+</body>
+</html>
