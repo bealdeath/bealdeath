@@ -54,25 +54,20 @@ app.post('/login', async (req, res) => {
     console.log('Password provided:', password);
     console.log('Hashed password from DB:', user.password);
 
-    bcrypt.compare(password, user.password, (err, isMatch) => {
-      if (err) {
-        console.error('Error comparing passwords:', err);
-        return res.status(500).json({ error: 'Internal server error' });
-      }
-      console.log('Password match result:', isMatch);
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match result:', isMatch);
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
 
-      const token = jwt.sign(
-        { userId: user.id, isAdmin: user.isAdmin },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
+    const token = jwt.sign(
+      { userId: user.id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-      res.json({ token });
-    });
+    res.json({ token });
   } catch (error) {
     console.error('Error generating token:', error);
     res.status(500).json({ error: 'Internal server error' });
