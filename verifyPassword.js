@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 
 const plainPassword = 'password123';
-const hashedPassword = '$2a$10$xxfk6J2fO3ATGT0NCrvqaur0E/EG70l47TT.JfDneP5UPwdwkVvW6'; // Replace with actual hashed password from the database
+const hashedPassword = '$2a$10$3sG1i4Jpl9vD2dMr4Yu7nOkqvBq49P6UGhjFAIQHVto0seRUtRs7y'; // Use the hash generated in Step 1
 
 console.log('Plain Password:', plainPassword);
 console.log('Hashed Password from DB:', hashedPassword);
