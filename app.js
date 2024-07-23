@@ -34,7 +34,7 @@ app.post('/register', async (req, res) => {
     console.log(`Hashing password for user: ${email}`);
     console.log(`Hashed password: ${hashedPassword}`);
     const user = await User.create({ firstName, lastName, email, password: hashedPassword });
-    console.log('User created:', user);
+    console.log(`User created: ${JSON.stringify(user)}`);
     res.status(201).json(user);
   } catch (error) {
     console.error('Error registering user:', error);
@@ -48,10 +48,11 @@ app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      console.log('User not found:', email);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    console.log('User found:', user);
+    console.log('User found:', JSON.stringify(user));
     console.log('Password provided:', password);
     console.log('Hashed password from DB:', user.password);
 
@@ -59,6 +60,7 @@ app.post('/login', async (req, res) => {
     console.log('Password match result:', isMatch);
 
     if (!isMatch) {
+      console.log('Invalid password for user:', email);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -89,6 +91,7 @@ app.get('/users', authenticateJWT, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 
 // Routes for tables

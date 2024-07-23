@@ -10,6 +10,10 @@ module.exports = (sequelize) => {
     static async hashPassword(password) {
       return bcrypt.hash(password, 10);
     }
+
+    async comparePassword(plainPassword) {
+      return bcrypt.compare(plainPassword, this.password);
+    }
   }
 
   User.init({
