@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const { sequelize, User } = require('./models');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authenticateJWT = require('./middleware/auth');
 
@@ -30,11 +29,8 @@ app.get('/', (req, res) => {
 app.post('/register', async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(`Hashing password for user: ${email}`);
-    console.log(`Hashed password: ${hashedPassword}`);
-    const user = await User.create({ firstName, lastName, email, password: hashedPassword });
-    console.log('User created:', user);
+    const user = await User.create({ firstName, lastName, email, password });
+    console.log('User created:', user.dataValues);
     res.status(201).json(user);
   } catch (error) {
     console.error('Error registering user:', error);
@@ -52,11 +48,10 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    console.log('User found:', JSON.stringify(user));
+    console.log('User found:', JSON.stringify(user.dataValues));
     console.log('Password provided:', password);
-    console.log('Hashed password from DB:', user.password);
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
     console.log(`Comparing: ${password} with ${user.password} -> ${isMatch}`);
 
     if (!isMatch) {
@@ -81,7 +76,6 @@ app.get('/protected', authenticateJWT, (req, res) => {
   res.send('This is a protected route');
 });
 
-// Protect users route
 app.get('/users', authenticateJWT, async (req, res) => {
   try {
     const users = await User.findAll();
@@ -90,7 +84,6 @@ app.get('/users', authenticateJWT, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 
 // Routes for tables
