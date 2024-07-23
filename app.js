@@ -1,4 +1,4 @@
-require('dotenv').config();  // Load environment variables
+require('dotenv').config();  // Load environment variables from .env file
 const express = require('express');
 const { sequelize, User, Table, Record } = require('./models');
 const bcrypt = require('bcryptjs');
@@ -8,9 +8,7 @@ const authenticateJWT = require('./middleware/auth');
 const app = express();
 app.use(express.json());
 
-const secret = process.env.JWT_SECRET;
-
-console.log('JWT_SECRET:', secret);  // Debug log to verify the secret key
+console.log('JWT_SECRET:', process.env.JWT_SECRET);  // Verify JWT_SECRET is loaded
 
 sequelize.authenticate()
   .then(() => {
@@ -30,19 +28,17 @@ app.get('/', (req, res) => {
 
 // Register user
 app.post('/register', async (req, res) => {
-  const { firstName, lastName, email, password, isAdmin } = req.body;
+  const { firstName, lastName, email, password } = req.body;
   try {
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ firstName, lastName, email, password: hashedPassword, isAdmin });
+    const user = await User.create({ firstName, lastName, email, password: hashedPassword });
     res.status(201).json(user);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error registering user:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // Login user
 app.post('/login', async (req, res) => {
@@ -50,19 +46,37 @@ app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid email or password' });
+
+    console.log('User found:', user);
+    console.log('Password:', password, typeof password);
+    console.log('Hashed Password:', user.password, typeof user.password);
+
+    // Check if password and hashed password are strings
+    if (typeof password !== 'string' || typeof user.password !== 'string') {
+      throw new Error('Password or hashed password is not a string');
     }
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.isAdmin }, secret, { expiresIn: '1h' });
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     res.json({ token });
   } catch (error) {
     console.error('Error generating token:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
 
 // Protect routes with authenticateJWT middleware
 app.get('/protected', authenticateJWT, (req, res) => {
