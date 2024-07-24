@@ -17,14 +17,16 @@ const Dashboard = () => {
         const token = localStorage.getItem('token');
         const response = await axios.get('http://localhost:5000/api/data', {
           headers: {
-            'Authorization': 'Bearer ' + token
+            'Authorization': 'Bearer ' + token,
           },
           params: {
             sortField,
-            sortOrder
-          }
+            sortOrder,
+          },
         });
-        const fetchedColumns = Object.keys(response.data.users[0]).filter(column => column !== 'isAdmin' && column !== 'password' && column !== 'id' && column !== 'createdAt' && column !== 'updatedAt');
+        const fetchedColumns = Object.keys(response.data.users[0]).filter(
+          (column) => column !== 'isAdmin' && column !== 'password' && column !== 'id' && column !== 'createdAt' && column !== 'updatedAt'
+        );
         setColumns(fetchedColumns);
         setUsers(response.data.users);
         toast.success('Data fetched successfully');
@@ -52,10 +54,10 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:5000/tables/1/records/${id}`, {
         headers: {
-          'Authorization': 'Bearer ' + token
-        }
+          'Authorization': 'Bearer ' + token,
+        },
       });
-      setUsers(users.filter(user => user.id !== id));
+      setUsers(users.filter((user) => user.id !== id));
       toast.success('User deleted successfully');
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -69,11 +71,11 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       await axios.put(`http://localhost:5000/tables/1/records/${editUser.id}`, editUser, {
         headers: {
-          'Authorization': 'Bearer ' + token
-        }
+          'Authorization': 'Bearer ' + token,
+        },
       });
       setEditUser(null);
-      const updatedUsers = users.map(user => (user.id === editUser.id ? editUser : user));
+      const updatedUsers = users.map((user) => (user.id === editUser.id ? editUser : user));
       setUsers(updatedUsers);
       toast.success('User updated successfully');
     } catch (error) {
@@ -98,8 +100,8 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       const response = await axios.post(`http://localhost:5000/tables/1/records`, newUser, {
         headers: {
-          'Authorization': 'Bearer ' + token
-        }
+          'Authorization': 'Bearer ' + token,
+        },
       });
       setUsers([...users, response.data]);
       setNewUser({ firstName: '', lastName: '', email: '', role: '' });
@@ -117,8 +119,10 @@ const Dashboard = () => {
       <div>
         <label>Sort Field: </label>
         <select value={sortField} onChange={(e) => setSortField(e.target.value)}>
-          {columns.map(column => (
-            <option key={column} value={column}>{column}</option>
+          {columns.map((column) => (
+            <option key={column} value={column}>
+              {column}
+            </option>
           ))}
         </select>
         <label>Sort Order: </label>
@@ -130,7 +134,7 @@ const Dashboard = () => {
       <table>
         <thead>
           <tr>
-            {columns.map(column => (
+            {columns.map((column) => (
               <th key={column} onClick={() => handleSort(column)}>
                 {column}
               </th>
@@ -139,9 +143,9 @@ const Dashboard = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {users.map((user) => (
             <tr key={user.id}>
-              {columns.map(column => (
+              {columns.map((column) => (
                 <td key={column}>{user[column]}</td>
               ))}
               <td>
@@ -156,15 +160,10 @@ const Dashboard = () => {
       {editUser && (
         <form onSubmit={handleUpdate}>
           <h2>Edit Record</h2>
-          {columns.map(column => (
+          {columns.map((column) => (
             <div key={column}>
               <label>{column}</label>
-              <input
-                type="text"
-                name={column}
-                value={editUser[column]}
-                onChange={handleInputChange}
-              />
+              <input type="text" name={column} value={editUser[column]} onChange={handleInputChange} />
             </div>
           ))}
           <button type="submit">Update Record</button>
@@ -178,15 +177,10 @@ const Dashboard = () => {
       {showAddForm && (
         <form onSubmit={handleAddRecord}>
           <h2>Add Record</h2>
-          {columns.map(column => (
+          {columns.map((column) => (
             <div key={column}>
               <label>{column}</label>
-              <input
-                type="text"
-                name={column}
-                value={newUser[column]}
-                onChange={handleNewInputChange}
-              />
+              <input type="text" name={column} value={newUser[column]} onChange={handleNewInputChange} />
             </div>
           ))}
           <button type="submit">Add Record</button>

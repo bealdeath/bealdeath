@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { ToastContainer } from 'react-toastify';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Login from './components/login';
+import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import AddRecord from './components/AddRecord';
 
@@ -13,6 +13,7 @@ const App = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
+      // Verify token with backend
       axios.get('http://localhost:5000/protected', {
         headers: {
           'Authorization': 'Bearer ' + token
@@ -31,24 +32,22 @@ const App = () => {
 
   return (
     <Router>
-      <div>
-        <ToastContainer />
-        <Routes>
-          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-          <Route 
-            path="/dashboard" 
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/add-record/:tableId" 
-            element={isAuthenticated ? <AddRecord /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/" 
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
-          />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        <Route 
+          path="/dashboard" 
+          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/add-record/:tableId" 
+          element={isAuthenticated ? <AddRecord /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/" 
+          element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
+        />
+      </Routes>
+      <ToastContainer />
     </Router>
   );
 };
