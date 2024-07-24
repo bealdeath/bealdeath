@@ -37,12 +37,9 @@ app.get('/login', (req, res) => {
 app.post('/register', async (req, res) => {
   const { firstName, lastName, email, password, role, isAdmin } = req.body;
   try {
-    console.log(`Registering user: ${email}`);
     const user = await User.create({ firstName, lastName, email, password, role, isAdmin });
-    console.log('User created:', user.dataValues);
     res.status(201).json(user);
   } catch (error) {
-    console.error('Error registering user:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -53,16 +50,10 @@ app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      console.log(`User not found: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    console.log('User found:', JSON.stringify(user.dataValues));
-    console.log('Password provided:', password);
-    console.log('Hashed password from DB:', user.password);
-
     const isMatch = await user.comparePassword(password);
-    console.log(`Comparing: ${password} with ${user.password} -> ${isMatch}`);
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -76,7 +67,6 @@ app.post('/login', async (req, res) => {
 
     res.json({ token });
   } catch (error) {
-    console.error('Error generating token:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -111,20 +101,10 @@ app.get('/users', authenticateJWT, async (req, res) => {
 
 // Route to serve data for charting
 app.get('/api/data', authenticateJWT, async (req, res) => {
-  console.log('Request received for /api/data'); // Log when the request is received
   try {
-    const tables = await Table.findAll({
-      include: [{
-        model: Record,
-        as: 'records'
-      }]
-    });
-
-    console.log('Tables data:', JSON.stringify(tables, null, 2)); // Log the fetched data
-
-    res.json(tables);
+    const users = await User.findAll();
+    res.json(users);
   } catch (error) {
-    console.error('Error fetching tables:', error); // Log any errors
     res.status(500).json({ error: error.message });
   }
 });
