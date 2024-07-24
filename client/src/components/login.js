@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const Login = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -15,10 +16,10 @@ const Login = ({ setIsAuthenticated }) => {
       });
       localStorage.setItem('token', response.data.token);
       setIsAuthenticated(true);
-      toast.success('Login successful');
+      console.log('Login successful');
+      navigate('/dashboard');  // Navigate to the dashboard after successful login
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Login failed');
     }
   };
 
@@ -39,7 +40,6 @@ const Login = ({ setIsAuthenticated }) => {
         />
         <button type="submit">Login</button>
       </form>
-      <ToastContainer />
     </div>
   );
 };
