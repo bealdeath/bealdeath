@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast, ToastContainer } from 'react-toastify';
 
 const Login = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState('');
@@ -40,6 +39,7 @@ const Login = ({ setIsAuthenticated }) => {
         />
         <button type="submit">Login</button>
       </form>
+      <ToastContainer />
     </div>
   );
 };

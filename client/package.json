@@ -7,14 +7,11 @@
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",
     "axios": "^1.7.2",
-    "nth-check": "^2.1.1",
-    "postcss": "^8.4.39",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.25.1",
     "react-scripts": "5.0.1",
-    "resolve-url-loader": "^5.0.0",
-    "svgo": "^3.3.2",
+    "react-toastify": "^10.0.5",
     "web-vitals": "^4.2.2"
   },
   "scripts": {
@@ -42,9 +39,6 @@
     ]
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@babel/plugin-transform-private-property-in-object": "^7.24.7",
-    "concurrently": "^8.2.2",
-    "react-app-rewired": "^2.2.1"
+    "concurrently": "^8.2.2"
   }
 }

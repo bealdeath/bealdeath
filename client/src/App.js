@@ -31,24 +31,22 @@ const App = () => {
 
   return (
     <Router>
-      <div>
-        <ToastContainer />
-        <Routes>
-          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-          <Route 
-            path="/dashboard" 
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/add-record/:tableId" 
-            element={isAuthenticated ? <AddRecord /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/" 
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
-          />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        <Route 
+          path="/dashboard" 
+          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/add-record/:tableId" 
+          element={isAuthenticated ? <AddRecord /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/" 
+          element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
+        />
+      </Routes>
+      <ToastContainer />
     </Router>
   );
 };

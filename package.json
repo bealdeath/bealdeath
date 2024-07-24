@@ -19,11 +19,12 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.12.0",
     "pg-hstore": "^2.3.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-toastify": "^10.0.5",
     "sequelize": "^6.37.3"
   },
   "devDependencies": {
-    "@babel/plugin-transform-private-property-in-object": "^7.21.0",
     "concurrently": "^7.0.0",
     "nodemon": "^3.1.4",
     "sequelize-cli": "^6.6.2"
