@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
@@ -26,8 +27,10 @@ const Dashboard = () => {
         const fetchedColumns = Object.keys(response.data.users[0]).filter(column => column !== 'isAdmin' && column !== 'password' && column !== 'id' && column !== 'createdAt' && column !== 'updatedAt');
         setColumns(fetchedColumns);
         setUsers(response.data.users);
+        toast.success('Data fetched successfully');
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Error fetching data');
       }
     };
 
@@ -53,8 +56,10 @@ const Dashboard = () => {
         }
       });
       setUsers(users.filter(user => user.id !== id));
+      toast.success('User deleted successfully');
     } catch (error) {
       console.error('Error deleting user:', error);
+      toast.error('Error deleting user');
     }
   };
 
@@ -70,8 +75,10 @@ const Dashboard = () => {
       setEditUser(null);
       const updatedUsers = users.map(user => (user.id === editUser.id ? editUser : user));
       setUsers(updatedUsers);
+      toast.success('User updated successfully');
     } catch (error) {
       console.error('Error updating user:', error);
+      toast.error('Error updating user');
     }
   };
 
@@ -96,9 +103,11 @@ const Dashboard = () => {
       });
       setUsers([...users, response.data]);
       setNewUser({ firstName: '', lastName: '', email: '', role: '' });
-      setShowAddForm(false); // hide form after adding record
+      setShowAddForm(false);
+      toast.success('User added successfully');
     } catch (error) {
-      console.error('Error adding record:', error);
+      console.error('Error adding user:', error);
+      toast.error('Error adding user');
     }
   };
 
@@ -117,7 +126,6 @@ const Dashboard = () => {
           <option value="ASC">Ascending</option>
           <option value="DESC">Descending</option>
         </select>
-        <button onClick={() => {}}>Apply Sort</button>
       </div>
       <table>
         <thead>
