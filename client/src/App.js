@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import Login from './components/Login';
+import Login from './components/login';
 import Dashboard from './components/Dashboard';
 import AddRecord from './components/AddRecord';
+import EditRecord from './components/EditRecord';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,6 +39,10 @@ const App = () => {
         <Route 
           path="/add-record/:tableId" 
           element={isAuthenticated ? <AddRecord /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/edit-record/:id" 
+          element={isAuthenticated ? <EditRecord /> : <Navigate to="/login" />} 
         />
         <Route 
           path="/" 

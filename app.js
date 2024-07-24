@@ -112,12 +112,13 @@ app.get('/users', authenticateJWT, async (req, res) => {
 const { Op, Sequelize } = require('sequelize');
 
 // Route to serve data for charting with sorting and filtering
+// Route to serve data for charting with sorting and filtering
 app.get('/api/data', authenticateJWT, async (req, res) => {
-  const { sortField, sortOrder, filterField } = req.query;
+  const { sortField, sortOrder } = req.query;
 
   try {
     let queryOptions = {
-      where: {},
+      attributes: { exclude: ['password', 'isAdmin'] }, // Exclude sensitive columns
       order: []
     };
 
@@ -125,13 +126,7 @@ app.get('/api/data', authenticateJWT, async (req, res) => {
       queryOptions.order.push([sortField, sortOrder]);
     }
 
-    if (filterField) {
-      queryOptions.where[filterField] = { [Op.like]: `%${filterField}%` };
-    }
-
     const users = await User.findAll(queryOptions);
-
-    // Get columns dynamically
     const columns = Object.keys(User.rawAttributes).filter(column => column !== 'password' && column !== 'isAdmin');
 
     res.json({ columns, users });

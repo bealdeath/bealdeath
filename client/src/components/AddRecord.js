@@ -1,43 +1,63 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const AddRecord = () => {
-  const { tableId } = useParams();
+  const { tableId, recordId } = useParams();
   const [content, setContent] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    const fetchRecord = async () => {
+      if (recordId) {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:5000/tables/${tableId}/records/${recordId}`, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        setContent(response.data.content);
+      }
+    };
+
+    fetchRecord();
+  }, [tableId, recordId]);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     const token = localStorage.getItem('token');
 
     try {
-      const response = await axios.post(
-        `http://localhost:5000/tables/${tableId}/records`,
-        { content },
-        {
+      if (recordId) {
+        await axios.put(`http://localhost:5000/tables/${tableId}/records/${recordId}`, { content }, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-      alert('Record added successfully');
-      console.log(response.data);
+            'Authorization': 'Bearer ' + token
+          }
+        });
+      } else {
+        await axios.post(`http://localhost:5000/tables/${tableId}/records`, { content }, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+      }
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Error adding record:', error);
-      alert('Failed to add record');
+      console.error('Error saving record:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        type="text"
-        placeholder="Content"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-      <button type="submit">Add Record</button>
-    </form>
+    <div>
+      <h1>{recordId ? 'Edit' : 'Add'} Record</h1>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Content:
+          <input type="text" value={content} onChange={(e) => setContent(e.target.value)} />
+        </label>
+        <button type="submit">{recordId ? 'Update' : 'Add'} Record</button>
+      </form>
+    </div>
   );
 };
 
