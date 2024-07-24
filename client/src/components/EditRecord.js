@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const EditRecord = () => {
   const { id } = useParams();
-  const [user, setUser] = useState({});
+  const [content, setContent] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchRecord = async () => {
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(`http://localhost:5000/tables/1/records/${id}`, {
@@ -16,27 +16,19 @@ const EditRecord = () => {
             'Authorization': 'Bearer ' + token
           }
         });
-        setUser(response.data);
+        setContent(response.data.content);
       } catch (error) {
         console.error('Error fetching record:', error);
       }
     };
 
-    fetchData();
+    fetchRecord();
   }, [id]);
 
-  const handleChange = (e) => {
-    setUser({
-      ...user,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleUpdate = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:5000/tables/1/records/${id}`, user, {
+      await axios.put(`http://localhost:5000/tables/1/records/${id}`, { content }, {
         headers: {
           'Authorization': 'Bearer ' + token
         }
@@ -50,21 +42,13 @@ const EditRecord = () => {
   return (
     <div>
       <h1>Edit Record</h1>
-      <form onSubmit={handleSubmit}>
-        {Object.keys(user).map(key => (
-          <div key={key}>
-            <label>{key}: </label>
-            <input
-              type="text"
-              name={key}
-              value={user[key] || ''}
-              onChange={handleChange}
-              disabled={key === 'id'}
-            />
-          </div>
-        ))}
-        <button type="submit">Update Record</button>
-      </form>
+      <label>Content: </label>
+      <input
+        type="text"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+      />
+      <button onClick={handleUpdate}>Update Record</button>
     </div>
   );
 };
