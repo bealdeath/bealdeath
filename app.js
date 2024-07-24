@@ -50,10 +50,16 @@ app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      console.log(`User not found: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    console.log('User found:', JSON.stringify(user.dataValues));
+    console.log('Password provided:', password);
+    console.log('Hashed password from DB:', user.password);
+
     const isMatch = await user.comparePassword(password);
+    console.log(`Comparing: ${password} with ${user.password} -> ${isMatch}`);
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -67,9 +73,11 @@ app.post('/login', async (req, res) => {
 
     res.json({ token });
   } catch (error) {
+    console.error('Error generating token:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // Protect routes with authenticateJWT middleware
 app.get('/protected', authenticateJWT, (req, res) => {
