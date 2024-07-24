@@ -111,7 +111,7 @@ app.get('/users', authenticateJWT, async (req, res) => {
 
 const { Op, Sequelize } = require('sequelize');
 
-// Route to serve data for charting with sorting and filtering
+
 // Route to serve data for charting with sorting and filtering
 app.get('/api/data', authenticateJWT, async (req, res) => {
   const { sortField, sortOrder } = req.query;
@@ -181,14 +181,36 @@ app.post('/tables/:tableId/records', authenticateJWT, async (req, res) => {
   }
 });
 
+// Add a record
+app.post('/tables/:tableId/records', authenticateJWT, async (req, res) => {
+  try {
+    const { tableId } = req.params;
+    const { firstName, lastName, email, role } = req.body;
+
+    const newRecord = await User.create({ firstName, lastName, email, role });
+
+    res.status(201).json(newRecord);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Update a record
 app.put('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) => {
   try {
     const { tableId, recordId } = req.params;
-    const { content } = req.body;
-    const record = await Record.findOne({ where: { id: recordId, tableId } });
+    const { firstName, lastName, email, role, createdAt, updatedAt } = req.body; // Add the fields you want to update
+
+    const record = await User.findOne({ where: { id: recordId } });
     if (record) {
-      record.content = content;
+      record.firstName = firstName;
+      record.lastName = lastName;
+      record.email = email;
+      record.role = role;
+      record.createdAt = createdAt;
+      record.updatedAt = updatedAt;
+
       await record.save();
       res.json(record);
     } else {
@@ -198,6 +220,7 @@ app.put('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) 
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // Delete a record
 app.delete('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) => {

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
   const [columns, setColumns] = useState([]);
   const [sortField, setSortField] = useState('');
   const [sortOrder, setSortOrder] = useState('');
-  const navigate = useNavigate();
+  const [editUser, setEditUser] = useState(null);
+  const [newUser, setNewUser] = useState({ firstName: '', lastName: '', email: '', role: '' });
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,10 +20,10 @@ const Dashboard = () => {
           },
           params: {
             sortField,
-            sortOrder,
+            sortOrder
           }
         });
-        const fetchedColumns = Object.keys(response.data.users[0]).filter(column => column !== 'isAdmin');
+        const fetchedColumns = Object.keys(response.data.users[0]).filter(column => column !== 'isAdmin' && column !== 'password' && column !== 'id' && column !== 'createdAt' && column !== 'updatedAt');
         setColumns(fetchedColumns);
         setUsers(response.data.users);
       } catch (error) {
@@ -39,6 +40,10 @@ const Dashboard = () => {
     setSortOrder(order);
   };
 
+  const handleEdit = (user) => {
+    setEditUser(user);
+  };
+
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem('token');
@@ -49,7 +54,51 @@ const Dashboard = () => {
       });
       setUsers(users.filter(user => user.id !== id));
     } catch (error) {
-      console.error('Error deleting record:', error);
+      console.error('Error deleting user:', error);
+    }
+  };
+
+  const handleUpdate = async (event) => {
+    event.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:5000/tables/1/records/${editUser.id}`, editUser, {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      setEditUser(null);
+      const updatedUsers = users.map(user => (user.id === editUser.id ? editUser : user));
+      setUsers(updatedUsers);
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setEditUser({ ...editUser, [name]: value });
+  };
+
+  const handleNewInputChange = (event) => {
+    const { name, value } = event.target;
+    setNewUser({ ...newUser, [name]: value });
+  };
+
+  const handleAddRecord = async (event) => {
+    event.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`http://localhost:5000/tables/1/records`, newUser, {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+      setUsers([...users, response.data]);
+      setNewUser({ firstName: '', lastName: '', email: '', role: '' });
+      setShowAddForm(false); // hide form after adding record
+    } catch (error) {
+      console.error('Error adding record:', error);
     }
   };
 
@@ -88,14 +137,53 @@ const Dashboard = () => {
                 <td key={column}>{user[column]}</td>
               ))}
               <td>
-                <button onClick={() => navigate(`/edit-record/${user.id}`)}>Edit</button>
+                <button onClick={() => handleEdit(user)}>Edit</button>
                 <button onClick={() => handleDelete(user.id)}>Delete</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <Link to="/add-record/1">Add Record to Table 1</Link>
+
+      {editUser && (
+        <form onSubmit={handleUpdate}>
+          <h2>Edit Record</h2>
+          {columns.map(column => (
+            <div key={column}>
+              <label>{column}</label>
+              <input
+                type="text"
+                name={column}
+                value={editUser[column]}
+                onChange={handleInputChange}
+              />
+            </div>
+          ))}
+          <button type="submit">Update Record</button>
+        </form>
+      )}
+
+      {!showAddForm && (
+        <button onClick={() => setShowAddForm(true)}>Add Record</button>
+      )}
+
+      {showAddForm && (
+        <form onSubmit={handleAddRecord}>
+          <h2>Add Record</h2>
+          {columns.map(column => (
+            <div key={column}>
+              <label>{column}</label>
+              <input
+                type="text"
+                name={column}
+                value={newUser[column]}
+                onChange={handleNewInputChange}
+              />
+            </div>
+          ))}
+          <button type="submit">Add Record</button>
+        </form>
+      )}
     </div>
   );
 };

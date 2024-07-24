@@ -53,7 +53,8 @@ module.exports = (sequelize) => {
           console.log(`Updated hashed password: ${user.password}`);
         }
       }
-    }
+    },
+    timestamps: true, // Enable timestamps
   });
 
   return User;
