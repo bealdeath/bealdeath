@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Login from './components/Login';
+import Login from './components/login';
 import Dashboard from './components/Dashboard';
 import AddRecord from './components/AddRecord';
 
