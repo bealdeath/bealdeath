@@ -109,15 +109,40 @@ app.get('/users', authenticateJWT, async (req, res) => {
   }
 });
 
-// Route to serve data for charting
+const { Op, Sequelize } = require('sequelize');
+
+// Route to serve data for charting with sorting and filtering
 app.get('/api/data', authenticateJWT, async (req, res) => {
+  const { sortField, sortOrder, filterField } = req.query;
+
   try {
-    const users = await User.findAll();
-    res.json(users);
+    let queryOptions = {
+      where: {},
+      order: []
+    };
+
+    if (sortField && sortOrder) {
+      queryOptions.order.push([sortField, sortOrder]);
+    }
+
+    if (filterField) {
+      queryOptions.where[filterField] = { [Op.like]: `%${filterField}%` };
+    }
+
+    const users = await User.findAll(queryOptions);
+
+    // Get columns dynamically
+    const columns = Object.keys(User.rawAttributes).filter(column => column !== 'password' && column !== 'isAdmin');
+
+    res.json({ columns, users });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+
+
 
 // Routes for tables
 app.get('/tables', authenticateJWT, async (req, res) => {

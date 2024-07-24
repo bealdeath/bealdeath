@@ -11,7 +11,6 @@ const App = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Verify token with backend
       axios.get('http://localhost:5000/protected', {
         headers: {
           'Authorization': 'Bearer ' + token

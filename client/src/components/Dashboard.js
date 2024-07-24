@@ -1,61 +1,90 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
+  const [columns, setColumns] = useState([]);
+  const [sortField, setSortField] = useState('');
+  const [sortOrder, setSortOrder] = useState('');
+
+  const fetchData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/api/data', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        },
+        params: {
+          sortField,
+          sortOrder
+        }
+      });
+
+      const fetchedColumns = Object.keys(response.data.users[0]).filter(column => column !== 'isAdmin' && column !== 'password');
+      setColumns(fetchedColumns);
+      setUsers(response.data.users);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }, [sortField, sortOrder]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await axios.get('http://localhost:5000/users', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        setUsers(response.data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  const handleSortChange = (e) => {
+    setSortField(e.target.value);
+  };
+
+  const handleOrderChange = (e) => {
+    setSortOrder(e.target.value);
+  };
+
+  const applyChanges = () => {
+    fetchData();
+  };
 
   return (
     <div>
       <h1>Dashboard</h1>
+      <div>
+        <label>Sort Field: </label>
+        <select value={sortField} onChange={handleSortChange}>
+          <option value="">Select a field</option>
+          {columns.map(column => (
+            <option key={column} value={column}>{column}</option>
+          ))}
+        </select>
+        <label>Sort Order: </label>
+        <select value={sortOrder} onChange={handleOrderChange}>
+          <option value="">Select order</option>
+          <option value="ASC">Ascending</option>
+          <option value="DESC">Descending</option>
+        </select>
+        <button onClick={applyChanges}>Apply Changes</button>
+      </div>
       <table>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Admin</th>
-            <th>Created At</th>
-            <th>Updated At</th>
+            {columns.map(column => (
+              <th key={column}>
+                {column}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {users.map(user => (
             <tr key={user.id}>
-              <td>{user.id}</td>
-              <td>{user.firstName}</td>
-              <td>{user.lastName}</td>
-              <td>{user.email}</td>
-              <td>{user.role}</td>
-              <td>{user.isAdmin ? 'Yes' : 'No'}</td>
-              <td>{new Date(user.createdAt).toLocaleString()}</td>
-              <td>{new Date(user.updatedAt).toLocaleString()}</td>
+              {columns.map(column => (
+                <td key={column}>{user[column]}</td>
+              ))}
             </tr>
           ))}
         </tbody>
       </table>
-      <Link to={`/add-record/1`}>Add Record to Table 1</Link>
-      {/* Adjust the tableId as needed */}
+      <Link to="/add-record/1">Add Record to Table 1</Link>
     </div>
   );
 };
