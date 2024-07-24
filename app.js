@@ -5,10 +5,12 @@ const jwt = require('jsonwebtoken');
 const authenticateJWT = require('./middleware/auth');
 const verifyRole = require('./middleware/verifyRole');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000' }));
 
 // Database connection
 sequelize.authenticate()
@@ -77,7 +79,6 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 // Protect routes with authenticateJWT middleware
 app.get('/protected', authenticateJWT, (req, res) => {
