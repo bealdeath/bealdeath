@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
@@ -29,8 +31,10 @@ const Dashboard = () => {
         );
         setColumns(fetchedColumns);
         setUsers(response.data.users);
+        toast.success('Data fetched successfully');
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Error fetching data');
       }
     };
 
@@ -110,6 +114,7 @@ const Dashboard = () => {
   return (
     <div>
       <h1>Dashboard</h1>
+      <ToastContainer />
       <div>
         <label>Sort Field: </label>
         <select value={sortField} onChange={(e) => setSortField(e.target.value)}>
