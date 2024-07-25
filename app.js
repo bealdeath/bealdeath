@@ -6,11 +6,27 @@ const authenticateJWT = require('./middleware/auth');
 const verifyRole = require('./middleware/verifyRole');
 const path = require('path');
 const cors = require('cors');
+const { Op } = require('sequelize');
+const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors({ origin: 'http://localhost:3000' }));
+
+// Log environment variables to ensure they are loaded correctly
+console.log('Email user:', process.env.EMAIL_USER);
+console.log('Email pass:', process.env.EMAIL_PASS);
+console.log('JWT secret:', process.env.JWT_SECRET);
+
+// Configure Nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // Database connection
 sequelize.authenticate()
@@ -35,11 +51,23 @@ app.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Register user
+// Register user and send verification email
 app.post('/register', async (req, res) => {
   const { firstName, lastName, email, password, role, isAdmin } = req.body;
   try {
     const user = await User.create({ firstName, lastName, email, password, role, isAdmin });
+    
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+
+    // Send verification email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Email Verification',
+      text: `Click this link to verify your email: ${verificationLink}`
+    });
+
     res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
@@ -52,17 +80,10 @@ app.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      console.log(`User not found: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    console.log('User found:', JSON.stringify(user.dataValues));
-    console.log('Password provided:', password);
-    console.log('Hashed password from DB:', user.password);
-
     const isMatch = await user.comparePassword(password);
-    console.log(`Comparing: ${password} with ${user.password} -> ${isMatch}`);
-
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -73,9 +94,98 @@ app.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.json({ token });
+    res.json({ token, role: user.role });
   } catch (error) {
-    console.error('Error generating token:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Email verification route
+app.post('/verify-email', async (req, res) => {
+  const { token } = req.body;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ where: { id: decoded.userId } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.isVerified = true;
+    await user.save();
+
+    res.json({ message: 'Email verified successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Password recovery route
+app.post('/recover-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const recoveryLink = `http://localhost:3000/reset-password?token=${token}`;
+
+    // Send recovery email
+    await transporter.sendMail({
+      from: process.env.YAHOO_USER,
+      to: user.email,
+      subject: 'Password Recovery',
+      text: `Click this link to recover your password: ${recoveryLink}`
+    });
+
+    res.json({ message: 'Recovery email sent' });
+  } catch (error) {
+    console.error('Error sending recovery email:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Send verification email after registration
+app.post('/register', async (req, res) => {
+  const { firstName, lastName, email, password, role, isAdmin } = req.body;
+  try {
+    const user = await User.create({ firstName, lastName, email, password, role, isAdmin });
+    
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+
+    // Send verification email
+    await transporter.sendMail({
+      from: process.env.YAHOO_USER,
+      to: user.email,
+      subject: 'Email Verification',
+      text: `Click this link to verify your email: ${verificationLink}`
+    });
+
+    res.status(201).json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Password reset route
+app.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findOne({ where: { id: decoded.userId } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.password = newPassword;  // Ensure you hash the password in your model
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -108,35 +218,50 @@ app.get('/users', authenticateJWT, async (req, res) => {
   }
 });
 
-const { Op, Sequelize } = require('sequelize');
-
-
 // Route to serve data for charting with sorting and filtering
 app.get('/api/data', authenticateJWT, async (req, res) => {
-  const { sortField, sortOrder } = req.query;
+  const { sortField, sortOrder, page = 1, limit = 10, search = '' } = req.query;
 
   try {
     let queryOptions = {
-      attributes: { exclude: ['password', 'isAdmin'] }, // Exclude sensitive columns
-      order: []
+      attributes: { exclude: ['password', 'isAdmin'] },
+      order: [],
+      where: {}
     };
 
     if (sortField && sortOrder) {
       queryOptions.order.push([sortField, sortOrder]);
     }
 
-    const users = await User.findAll(queryOptions);
-    const columns = Object.keys(User.rawAttributes).filter(column => column !== 'password' && column !== 'isAdmin');
+    if (search) {
+      queryOptions.where = {
+        [Op.or]: [
+          { firstName: { [Op.like]: `%${search}%` } },
+          { lastName: { [Op.like]: `%${search}%` } },
+          { email: { [Op.like]: `%${search}%` } }
+        ]
+      };
+    }
 
-    res.json({ columns, users });
+    const offset = (page - 1) * limit;
+    const { count, rows } = await User.findAndCountAll({
+      ...queryOptions,
+      offset,
+      limit: parseInt(limit)
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    res.json({
+      columns: Object.keys(User.rawAttributes).filter(column => column !== 'password' && column !== 'isAdmin'),
+      users: rows,
+      total: count,
+      totalPages
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-
-
 
 // Routes for tables
 app.get('/tables', authenticateJWT, async (req, res) => {
@@ -194,7 +319,6 @@ app.post('/tables/:tableId/records', authenticateJWT, async (req, res) => {
   }
 });
 
-
 // Update a record
 app.put('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) => {
   try {
@@ -219,7 +343,6 @@ app.put('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) 
     res.status(500).json({ error: error.message });
   }
 });
-
 
 // Delete a record
 app.delete('/tables/:tableId/records/:recordId', authenticateJWT, async (req, res) => {

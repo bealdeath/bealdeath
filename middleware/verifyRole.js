@@ -1,12 +1,12 @@
 const verifyRole = (roles) => {
-    return (req, res, next) => {
-      if (roles.includes(req.user.role)) {
-        next();
-      } else {
-        res.status(403).json({ error: 'Access denied' });
-      }
-    };
+  return (req, res, next) => {
+    const userRole = req.user.role;
+    if (roles.includes(userRole)) {
+      next();
+    } else {
+      res.status(403).json({ error: 'Forbidden' });
+    }
   };
-  
-  module.exports = verifyRole;
-  
+};
+
+module.exports = verifyRole;

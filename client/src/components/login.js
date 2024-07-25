@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const Login = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState('');
@@ -11,22 +9,16 @@ const Login = ({ setIsAuthenticated }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
     try {
-      const response = await axios.post('http://localhost:5000/login', {
-        email,
-        password,
-      });
+      const response = await axios.post('http://localhost:5000/login', { email, password });
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('role', response.data.role); // Store role
       setIsAuthenticated(true);
-      toast.success('Login successful');
+      console.log('Logged in role:', response.data.role);  // Log the role
       navigate('/dashboard');
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Login failed');
+      alert('Login failed');
     }
   };
 
@@ -47,7 +39,7 @@ const Login = ({ setIsAuthenticated }) => {
         />
         <button type="submit">Login</button>
       </form>
-      <ToastContainer />
+      <button onClick={() => navigate('/register')}>Register</button>
     </div>
   );
 };
